@@ -8,7 +8,7 @@ local ns = vim.api.nvim_create_namespace("arrow_bookmarks")
 M.local_bookmarks = {}
 M.last_sync_bookmarks = {}
 
-vim.fn.sign_define("ArrowBookmarkSign", { text = "", texthl = "ArrowBookmarkSign" })
+vim.fn.sign_define("ArrowBookmarkSign", { text = "⚐", texthl = "ArrowBookmarkSign" })
 
 local function notify()
 	vim.api.nvim_exec_autocmds("User", {
