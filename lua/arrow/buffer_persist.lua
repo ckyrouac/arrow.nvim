@@ -64,6 +64,35 @@ function M.redraw_bookmarks(bufnr, result)
 	notify()
 end
 
+function M.list_bookmark_files()
+	return vim.split(vim.fn.glob(config.getState("save_path")() .. "/*"), '\n', {trimempty=true})
+end
+
+function M.load_project_bookmarks()
+	M.project_bookmarks = {}
+
+	local all_bookmark_files = M.list_bookmark_files()
+
+	for _, file in ipairs(all_bookmark_files) do
+		if file:find(utils.normalize_path_to_filename(vim.fn.getcwd())) then
+			local f = assert(io.open(file, "rb"))
+			local content = f:read("a")
+			f:close()
+
+			local success, bookmarks = pcall(json.decode, content)
+			if success then
+				for _, bookmark in ipairs(bookmarks) do
+					table.insert(M.project_bookmarks, {file = bookmark.file, name = vim.fs.basename(bookmark.file), col = bookmark.col, ext_id = bookmark.ext_id, line = bookmark.line})
+				end
+			else
+				print("Unable to decode arrow bookmark file: ", file)
+			end
+		end
+	end
+
+	return M.project_bookmarks
+end
+
 function M.load_buffer_bookmarks(bufnr)
 	-- return if already loaded
 	if M.local_bookmarks[bufnr] ~= nil then
@@ -98,6 +127,7 @@ function M.load_buffer_bookmarks(bufnr)
 			M.local_bookmarks[bufnr] = {}
 		end
 	end
+
 	notify()
 end
 
@@ -226,6 +256,7 @@ function M.save(bufnr, line_nr, col_nr)
 	local data = {
 		line = line_nr,
 		col = col_nr,
+		file = vim.api.nvim_buf_get_name(bufnr),
 	}
 
 	if not (M.is_saved(bufnr, data)) then

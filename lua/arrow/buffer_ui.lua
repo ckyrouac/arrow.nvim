@@ -56,15 +56,11 @@ local function getActionsMenu(count)
 	return return_mappings
 end
 
-function M.spawn_preview_window(buffer, index, bookmark, bookmark_count)
+function M.spawn_preview_window(file, index, bookmark, bookmark_count)
 	local lines_count = config.getState("per_buffer_config").lines
-
 	local height = math.ceil((vim.o.lines - 4) / 2)
-
 	local row = height + (index - 1) * (lines_count + 2) - (bookmark_count - 1) * lines_count
-
 	local width = math.ceil(vim.o.columns / 2)
-	
 	local zindex = config.getState("buffer_mark_zindex")
 
 	lastRow = row
@@ -80,22 +76,20 @@ function M.spawn_preview_window(buffer, index, bookmark, bookmark_count)
 		zindex = zindex or 50,
 	}
 
+	local buffer = vim.fn.bufadd(file)
+	vim.fn.bufload(file)
+
 	local displayIndex = config.getState("index_keys"):sub(index, index)
-
 	local win = vim.api.nvim_open_win(buffer, true, window_config)
-
-	local extra_title = ""
-
-	if current_line_index == index then
-		extra_title = "(Current)"
-	end
 
 	vim.api.nvim_win_set_option(win, "scrolloff", 999)
 	vim.api.nvim_win_set_cursor(win, { bookmark.line, 0 })
-	vim.api.nvim_win_set_config(win, { title = displayIndex .. " " .. extra_title })
+	vim.api.nvim_win_set_config(win, { title = "[" .. displayIndex .. "]" .. " " .. bookmark.name }) -- TODO: add filename
 	vim.api.nvim_win_set_option(win, "number", true)
 
-	table.insert(preview_buffers, { buffer = buffer, win = win, index = index })
+
+	local to_insert = { buffer = buffer, win = win, index = index }
+	table.insert(preview_buffers, to_insert)
 
 	local ctx_config = config.getState("per_buffer_config").treesitter_context
 	if ctx_config ~= nil and ctx_config.line_shift_down ~= nil then
@@ -429,12 +423,16 @@ function M.spawn_action_windows(call_buffer, bookmarks, line_nr, col_nr, call_wi
 	render_highlights(actions_buffer)
 end
 
+function M.get_workspace_bookmarks()
+  return persist.load_project_bookmarks()
+end
+
 function M.openMenu(bufnr)
 	bufnr = bufnr or vim.api.nvim_get_current_buf()
 	persist.update()
 	persist.sync_buffer_bookmarks()
 	persist.redraw_bookmarks(bufnr, persist.get_bookmarks_by(bufnr))
-	local bookmarks = persist.get_bookmarks_by()
+	local bookmarks = M.get_workspace_bookmarks()
 
 	if not bookmarks then
 		bookmarks = {}
@@ -453,7 +451,7 @@ function M.openMenu(bufnr)
 			current_line_index = index
 		end
 
-		table.insert(opts_for_spawn, { bufnr, index, bookmark })
+		table.insert(opts_for_spawn, { bookmark.file, index, bookmark })
 	end
 
 	for _, opt in ipairs(opts_for_spawn) do
