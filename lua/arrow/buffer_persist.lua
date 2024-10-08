@@ -8,6 +8,8 @@ local ns = vim.api.nvim_create_namespace("arrow_bookmarks")
 M.local_bookmarks = {}
 M.last_sync_bookmarks = {}
 
+vim.fn.sign_define("ArrowBookmarkSign", { text = "", texthl = "ArrowBookmarkSign" })
+
 local function notify()
 	vim.api.nvim_exec_autocmds("User", {
 		pattern = "ArrowMarkUpdate",
@@ -42,6 +44,8 @@ function M.clear_buffer_ext_marks(bufnr)
 end
 
 function M.redraw_bookmarks(bufnr, result)
+	vim.fn.sign_unplace("Arrow")
+
 	for i, res in ipairs(result) do
 		local indexes = config.getState("index_keys")
 
@@ -52,6 +56,8 @@ function M.redraw_bookmarks(bufnr, result)
 			sign_hl_group = "ArrowBookmarkSign",
 			hl_mode = "combine",
 		})
+
+		vim.fn.sign_place(i, "Arrow", "ArrowBookmarkSign", bufnr, { lnum = line, priority = 10 })
 
 		res.ext_id = id
 	end
