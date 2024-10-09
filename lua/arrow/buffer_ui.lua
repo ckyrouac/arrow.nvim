@@ -198,15 +198,8 @@ local function closeMenu(actions_buffer, call_buffer)
 end
 
 local function go_to_bookmark(bookmark)
-	vim.cmd("normal! m'")
-	local win_height = vim.fn.winheight(0)
-	local top_line = vim.fn.line("w0")
-
+	vim.api.nvim_command('edit ' .. bookmark.file)
 	vim.api.nvim_win_set_cursor(0, { bookmark.line, bookmark.col })
-
-	if bookmark.line < top_line or bookmark.line >= top_line + win_height then
-		vim.cmd("normal! zz")
-	end
 end
 
 local function toggle_delete_mode(action_buffer)
