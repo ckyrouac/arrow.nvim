@@ -356,7 +356,7 @@ function M.spawn_action_windows(call_buffer, bookmarks, line_nr, col_nr, call_wi
 	end, menuKeymapOpts)
 
 	vim.keymap.set("n", mappings.clear_all_items, function()
-		persist.clear(call_buffer)
+		persist.clear_all(call_buffer)
 		closeMenu(actions_buffer, call_buffer)
 	end, menuKeymapOpts)
 

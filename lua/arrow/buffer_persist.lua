@@ -203,12 +203,12 @@ function M.remove(index, bufnr)
 	M.sync_buffer_bookmarks(bufnr)
 end
 
-function M.clear(bufnr)
-	bufnr = bufnr or vim.api.nvim_get_current_buf()
-
-	M.local_bookmarks[bufnr] = {}
-	vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-	M.sync_buffer_bookmarks(bufnr)
+function M.clear_all()
+	for bufnr in pairs(M.local_bookmarks) do
+		M.local_bookmarks[bufnr] = {}
+		vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+		M.sync_buffer_bookmarks(bufnr)
+	end
 end
 
 function M.update(bufnr)
